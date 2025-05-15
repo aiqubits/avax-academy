@@ -1,0 +1,19 @@
+{
+  "About": "关于",
+  "Support": "支持",
+  "Other": "其它",
+  "Theme": "主题",
+  "An": "一个",
+  "Launcher": "发射器",
+  "to_Your_Customized_Token": "为你的定制化代币",
+  "An_approachable_security_and_versatile_protocol(ERC)_for_building_customized_token": "一个用于构建安全的、多种合约类型的、定制化 Token 的平台入口",
+  "Start_Launching": "开始发射",
+  "Learn_More": "了解更多！",
+  "Approachable": "好用的",
+  "User_perspective_usage_easy_to_understand_parameter_settings_with_clear_annotations": "用户视角使用，易于理解的参数设置，注释清晰",
+  "Supports_multiple_protocol_tokens_ERC20_ERC721_ERC1155_AND_SO_ON": "支持多种协议的 Token，如 ERC20、ERC721、ERC1155 ...",
+  "Versatile": "通用的",
+  "Pure_static_no_backend_no_database_no_caching_platform_does_not_store_any_user_data_information_only_authorizes_wallet_access": "纯静态，无后端，无数据库，无缓存平台，不存储任何用户数据信息，仅授权钱包访问",
+  "This_is_a_simple_about_page_just_to_show_how_you_can_use_the_internationalization_in_different_pages": "这是一个简单的关于页面，只是为了展示如何在不同的页面中使用国际化",
+  "Performant": "安全的"
+}
