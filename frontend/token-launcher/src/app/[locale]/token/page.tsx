@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { parseUnits } from 'viem'
 import Button from '../components/Button'
 import { erc20Abi } from './erc20Abi'
@@ -137,6 +137,27 @@ export default function Token() {
       setIsDeploying(false)
     }
   }
+
+const chainId = useChainId();
+
+  const getExplorerUrl = (hash: string) => {
+      switch (chainId) {
+        case 1:
+          return `https://etherscan.io/tx/${hash}`;
+        case 4:
+          return `https://rinkeby.etherscan.io/tx/${hash}`;
+        case 137:
+          return `https://polygonscan.com/tx/${hash}`;
+        case 80001:
+          return `https://mumbai.polygonscan.com/tx/${hash}`;
+        case 43114:
+          return `https://snowtrace.io/tx/${hash}`;
+        case 11155111:
+          return `https://sepolia.etherscan.io/tx/${hash}`;
+        default:
+          return "";
+      }
+    }
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -216,7 +237,7 @@ export default function Token() {
               />
               {errors.totalSupply && <p className="text-red-500 text-sm mt-1">{errors.totalSupply}</p>}
               <p className="text-sm text-muted-foreground mt-1">
-                {t('total_supply_description') || 'The total number of tokens to be created'}
+                {t('total_supply_description') || 'The total number of tokens to be created (e.g., "1000000")'}
               </p>
             </div>
             
@@ -227,7 +248,7 @@ export default function Token() {
               </label>
               <input
                 type="text"
-                value={initialHolder || address}
+                value={initialHolder}
                 onChange={(e) => setInitialHolder(e.target.value as `0x${string}`)}
                 className="w-full p-2 border rounded-md bg-input"
                 placeholder="0x..."
@@ -280,7 +301,7 @@ export default function Token() {
               <p className="font-medium">{t('transaction_hash') || 'Transaction Hash'}:</p>
               <p className="font-mono break-all">{transactionHash}</p>
               <a 
-                href={`https://snowtrace.io/tx/${transactionHash}`}
+                href={getExplorerUrl(transactionHash)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline mt-2 inline-block"
@@ -318,7 +339,7 @@ export default function Token() {
           </p>
           {transactionHash && (
             <a 
-              href={`https://snowtrace.io/tx/${transactionHash}`}
+              href={getExplorerUrl(transactionHash)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline text-sm mt-2 inline-block"

@@ -26,8 +26,8 @@ export const config = getDefaultConfig({
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
   ],
   transports: {
-    [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/...'),
-    [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/...'),
+    [mainnet.id]: http(process.env.NEXT_PUBLIC_ETH_TRANSPORTS_MAINNET_URL),
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_ETH_TRANSPORTS_SEPOLIA_URL),
   },
   ssr: true,
 });

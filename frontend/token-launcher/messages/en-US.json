@@ -37,7 +37,7 @@
   "token_name_description": "The name of your token (e.g., \"My Awesome Token\")",
   "token_symbol_description": "The symbol of your token (e.g., \"MAT\")",
   "decimals_description": "The number of decimal places (usually 18 for most tokens)",
-  "total_supply_description": "The total number of tokens to be created",
+  "total_supply_description": "The total number of tokens to be created (e.g., \"1000000\")",
   "initial_holder_description": "The wallet address that will initially hold all tokens (defaults to your connected wallet)",
   "issue_erc721_nft": "Issue ERC721 NFT Collection",
   "NFT": "NFT",

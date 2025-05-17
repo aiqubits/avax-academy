@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import Button from '../components/Button'
 import { erc721FactoryAbi, erc721Abi } from './erc721Abi'
 import * as dotenv from 'dotenv';
@@ -15,7 +15,7 @@ export default function Nft() {
   // Form state
   const [collectionName, setCollectionName] = useState('')
   const [collectionSymbol, setCollectionSymbol] = useState('')
-  const [baseURI, setBaseURI] = useState('')
+  const [baseURI, setBaseURI] = useState('https://avatars.githubusercontent.com/u/193314995?s=400&u=ed1052cfc869ed1ee510b66d2df249c8eee14b50&v=4')
   const [mintPrice, setMintPrice] = useState('0')
   
   // Validation state
@@ -179,6 +179,27 @@ export default function Nft() {
       console.error('Minting error:', error)
     }
   }
+
+  const chainId = useChainId();
+
+  const getExplorerUrl = (hash: string) => {
+      switch (chainId) {
+        case 1:
+          return `https://etherscan.io/tx/${hash}`;
+        case 4:
+          return `https://rinkeby.etherscan.io/tx/${hash}`;
+        case 137:
+          return `https://polygonscan.com/tx/${hash}`;
+        case 80001:
+          return `https://mumbai.polygonscan.com/tx/${hash}`;
+        case 43114:
+          return `https://snowtrace.io/tx/${hash}`;
+        case 11155111:
+          return `https://sepolia.etherscan.io/tx/${hash}`;
+        default:
+          return "";
+      }
+    }
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -235,7 +256,7 @@ export default function Nft() {
                 value={baseURI}
                 onChange={(e) => setBaseURI(e.target.value)}
                 className="w-full p-2 border rounded-md bg-input"
-                placeholder="https://example.com/api/nft_logo.jpg"
+                placeholder="https://avatars.githubusercontent.com/u/193314995?s=400&u=ed1052cfc869ed1ee510b66d2df249c8eee14b50&v=4"
               />
               {errors.baseURI && <p className="text-red-500 text-sm mt-1">{errors.baseURI}</p>}
               <p className="text-sm text-muted-foreground mt-1">
@@ -285,7 +306,7 @@ export default function Nft() {
               <p className="font-medium">{t('transaction_hash') || 'Transaction Hash'}:</p>
               <p className="font-mono break-all">{transactionHash}</p>
               <a 
-                href={`https://snowtrace.io/tx/${transactionHash}`}
+                href={getExplorerUrl(transactionHash)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline mt-2 inline-block"
@@ -330,7 +351,7 @@ export default function Nft() {
                   <p className="font-medium">{t('mint_transaction_hash') || 'Mint Transaction Hash'}:</p>
                   <p className="font-mono break-all">{mintTransactionHash}</p>
                   <a 
-                    href={`https://snowtrace.io/tx/${mintTransactionHash}`}
+                    href={getExplorerUrl(mintTransactionHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:underline mt-2 inline-block"
@@ -374,7 +395,7 @@ export default function Nft() {
           </p>
           {transactionHash && (
             <a 
-              href={`https://snowtrace.io/tx/${transactionHash}`}
+              href={getExplorerUrl(transactionHash)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline text-sm mt-2 inline-block"
@@ -398,7 +419,7 @@ export default function Nft() {
           </p>
           {mintTransactionHash && (
             <a 
-              href={`https://snowtrace.io/tx/${mintTransactionHash}`}
+              href={getExplorerUrl(mintTransactionHash)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline text-sm mt-2 inline-block"
