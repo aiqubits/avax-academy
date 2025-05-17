@@ -19,7 +19,7 @@ npx hardhat ignition deploy ./ignition/modules/Token.js --network customize
 ```shell
 export RPC_URL=https://sepolia.infura.io/v3/7cb673f9a1324974899fc4cd4429b450 
 export RPC_URL=https://evmrpc-testnet.0g.ai
-export RPC_URL=http://127.0.0.1:37067/ext/bc/SjTaiEohAg1SUZNWZCdoAc2Vux8HszeJDLf3xRvWBZyqzxwft/rpc
+export RPC_URL=http://127.0.0.1:35811/ext/bc/TLDJnNVgW5hzC9etPYb6cL4G4tWtuKTLgABB8BnY3iR8Gme12/rpc
 export PRIVATE_KEY=56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027
 
 # https://16600.rpc.thirdweb.com

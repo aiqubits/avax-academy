@@ -140,16 +140,56 @@ export default function Nft() {
     setErrors(newErrors)
     return isValid
   }
+
+  const chainId = useChainId();
+
+  const getExplorerUrl = (hash: string) => {
+      switch (chainId) {
+        case 1:
+          return `https://etherscan.io/tx/${hash}`;
+        case 4:
+          return `https://rinkeby.etherscan.io/tx/${hash}`;
+        case 137:
+          return `https://polygonscan.com/tx/${hash}`;
+        case 80001:
+          return `https://mumbai.polygonscan.com/tx/${hash}`;
+        case 43114:
+          return `https://snowtrace.io/tx/${hash}`;
+        case 11155111:
+          return `https://sepolia.etherscan.io/tx/${hash}`;
+        default:
+          return "";
+      }
+    }
   
   // Handle form submission
   const handleDeployCollection = async () => {
+    let contractAddress;
+
+    switch (chainId) {
+      case 1:
+        contractAddress = process.env.NEXT_PUBLIC_ETH_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 4:
+        contractAddress = process.env.NEXT_PUBLIC_RINKEBY_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 137:
+        contractAddress = process.env.NEXT_PUBLIC_POLYGON_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 80001:
+        contractAddress = process.env.NEXT_PUBLIC_MUMBAI_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 43114:
+        contractAddress = process.env.NEXT_PUBLIC_AVALANCHE_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 11155111:
+        contractAddress = process.env.NEXT_PUBLIC_SEPOLIA_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      default:
+        contractAddress = process.env.NEXT_PUBLIC_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+    }
+
     if (!validateForm()) return
     
     try {
       setIsDeploying(true)
       
       writeContract({
-        address: process.env.NEXT_PUBLIC_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`, // Replace with actual factory contract address
+        address: contractAddress,
         abi: erc721FactoryAbi,
         functionName: 'createCollection',
         args: [
@@ -180,27 +220,6 @@ export default function Nft() {
     }
   }
 
-  const chainId = useChainId();
-
-  const getExplorerUrl = (hash: string) => {
-      switch (chainId) {
-        case 1:
-          return `https://etherscan.io/tx/${hash}`;
-        case 4:
-          return `https://rinkeby.etherscan.io/tx/${hash}`;
-        case 137:
-          return `https://polygonscan.com/tx/${hash}`;
-        case 80001:
-          return `https://mumbai.polygonscan.com/tx/${hash}`;
-        case 43114:
-          return `https://snowtrace.io/tx/${hash}`;
-        case 11155111:
-          return `https://sepolia.etherscan.io/tx/${hash}`;
-        default:
-          return "";
-      }
-    }
-  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-center">

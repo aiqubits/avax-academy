@@ -107,38 +107,8 @@ export default function Token() {
     setErrors(newErrors)
     return isValid
   }
-  
-  // Handle form submission
-  const handleDeployToken = async () => {
-    if (!validateForm()) return
-    
-    try {
-      setIsDeploying(true)
-      
-      const totalSupplyWithDecimals = parseUnits(
-        totalSupply, 
-        parseInt(decimals)
-      )
-      
-      writeContract({
-        address: process.env.NEXT_PUBLIC_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'createERC20',
-        args: [
-          tokenName,
-          tokenSymbol,
-          parseInt(decimals),
-          totalSupplyWithDecimals,
-          initialHolder as `0x${string}`
-        ]
-      })
-    } catch (error) {
-      console.error('Deployment error:', error)
-      setIsDeploying(false)
-    }
-  }
 
-const chainId = useChainId();
+  const chainId = useChainId();
 
   const getExplorerUrl = (hash: string) => {
       switch (chainId) {
@@ -157,8 +127,57 @@ const chainId = useChainId();
         default:
           return "";
       }
-    }
+    }  
   
+  // Handle form submission
+  const handleDeployToken = async () => {
+    let contractAddress;
+
+    switch (chainId) {
+      case 1:
+        contractAddress = process.env.NEXT_PUBLIC_ETH_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 4:
+        contractAddress = process.env.NEXT_PUBLIC_RINKEBY_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 137:
+        contractAddress = process.env.NEXT_PUBLIC_POLYGON_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 80001:
+        contractAddress = process.env.NEXT_PUBLIC_MUMBAI_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 43114:
+        contractAddress = process.env.NEXT_PUBLIC_AVALANCHE_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      case 11155111:
+        contractAddress = process.env.NEXT_PUBLIC_SEPOLIA_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+      default:
+        contractAddress = process.env.NEXT_PUBLIC_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+    }
+
+    if (!validateForm()) return
+    
+    try {
+      setIsDeploying(true)
+      
+      const totalSupplyWithDecimals = parseUnits(
+        totalSupply, 
+        parseInt(decimals)
+      )
+      
+      writeContract({
+        address: contractAddress,
+        abi: erc20Abi,
+        functionName: 'createERC20',
+        args: [
+          tokenName,
+          tokenSymbol,
+          parseInt(decimals),
+          totalSupplyWithDecimals,
+          initialHolder as `0x${string}`
+        ]
+      })
+    } catch (error) {
+      console.error('Deployment error:', error)
+      setIsDeploying(false)
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-center">
