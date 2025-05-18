@@ -23,13 +23,18 @@ avalanche blockchain create myblockchain
 ```bash
 # Deploy L1 on Local
 avalanche blockchain deploy myblockchain --local
-
 ```
 
 ![](images/1746880277761.jpg)
 
 ![](images/1746868558459.jpg)
 
+```bash
+# Add one Validator
+avalanche blockchain addValidator CustomChain --weight 20
+```
+
+![](images/1747585225007.jpg)
 
 ## 导入 MetaMask 
 
@@ -100,8 +105,10 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getCode","params":["0xA4cD3b
 
 https://token-launcher-beryl.vercel.app/
 
-![](images/1747541888517.jpg)
-
 ![](images/1747582236559.jpg)
 
 ![](images/1747582297377.jpg)
+
+## 在自定义的L1上发布自定义MEME Token与NFT（视频）
+
+[![视频封面](images/1747541888517.jpg)](https://youtu.be/eqBNYiAOjMM)
