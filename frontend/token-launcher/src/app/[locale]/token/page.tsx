@@ -30,10 +30,10 @@ export default function Token() {
   })
   
   // Transaction state
-  const [isDeploying, setIsDeploying] = useState(false)
+  // const [isDeploying, setIsDeploying] = useState(false)
   const [deployedTokenAddress, setDeployedTokenAddress] = useState('')
   const [transactionHash, setTransactionHash] = useState('')
-  
+
   // Set initial holder to connected wallet address
   useEffect(() => {
     if (address) {
@@ -42,16 +42,38 @@ export default function Token() {
   }, [address])
   
   // Contract deployment hooks
-  const { data: hash, isPending, writeContract, error: writeError } = useWriteContract()
+  const { data: hash, isPending, writeContractAsync, error: writeError, isError: isWriteError } = useWriteContract()
   
   const { 
     data: receipt,
     isLoading: isConfirming,
-    error: confirmError
+    error: confirmError,
+    isSuccess: isConfirmed,
+    isError: isReceiptError,
+    status: receiptStatus    
   } = useWaitForTransactionReceipt({ 
     hash,
+    confirmations: 1,
+    query: {
+      enabled: !!hash,
+      retry: 3,
+      retryDelay: 1000
+    }    
   })
+
+  useEffect(() => {
+    if (!hash) return;
+    
+    const timer = setTimeout(() => {
+      if (!receipt && !isConfirming) {
+        console.warn('Transaction is taking too long to confirm. Hash:', hash);
+        // You might want to show a message to the user
+      }
+    }, 30000); // 30 seconds
   
+    return () => clearTimeout(timer);
+  }, [hash, receipt, isConfirming]);
+
   // Update transaction state when hash is available
   useEffect(() => {
     if (hash) {
@@ -59,13 +81,57 @@ export default function Token() {
     }
   }, [hash])
   
-  // Update deployed token address when receipt is available
-  useEffect(() => {
-    if (receipt?.contractAddress) {
-      setDeployedTokenAddress(receipt.contractAddress)
-      setIsDeploying(false)
+// Update the receipt effect to handle the actual logs we're seeing
+useEffect(() => {
+  if (!receipt) {
+    console.log('Skipping receipt processing - no receipt or not mounted');
+    return;
+  }
+  
+  // Debug: Log all events in the receipt
+  if (receipt.logs && Array.isArray(receipt.logs)) {    
+    // Look for the token address in the logs
+    // Based on the logs, we can see the token address in the second log's topics
+    if (receipt.logs.length >= 2) {
+      const tokenLog = receipt.logs[1]; // Second log seems to have the token info
+      
+      if (tokenLog.topics && tokenLog.topics[2]) {
+        try {
+          // Extract the address from the third topic (index 2) which contains the "to" address
+          const addressHex = tokenLog.address.slice(-40); // Last 40 characters
+          const tokenAddress = `0x${addressHex}`.toLowerCase();
+
+          setDeployedTokenAddress(tokenAddress);
+          // setIsDeploying(false);
+          return;
+        } catch (error) {
+          console.error('Error parsing token address from logs:', error);
+        }
+      }
     }
-  }, [receipt])
+
+    // Fallback: Try to find any address that looks like a token address
+    for (const log of receipt.logs) {
+      if (log.topics) {
+        for (const topic of log.topics) {
+          // Look for a topic that contains an address (40 hex chars)
+          const addressMatch = topic.match(/0x[a-fA-F0-9]{40}/);
+          if (addressMatch) {
+            const potentialAddress = addressMatch[0].toLowerCase();
+            console.log('Found potential token address:', potentialAddress);
+            setDeployedTokenAddress(potentialAddress);
+            // setIsDeploying(false);
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // If we get here, we couldn't find the token address in the logs
+  console.warn('Could not find token address in receipt logs');
+  // setIsDeploying(false);
+}, [receipt]);
   
   // Validate form
   const validateForm = () => {
@@ -131,36 +197,60 @@ export default function Token() {
   
   // Handle form submission
   const handleDeployToken = async () => {
+    console.log('Deploy token clicked');
+    // Log wallet connection status
+
     let contractAddress;
 
     switch (chainId) {
       case 1:
         contractAddress = process.env.NEXT_PUBLIC_ETH_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 4:
         contractAddress = process.env.NEXT_PUBLIC_RINKEBY_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 137:
         contractAddress = process.env.NEXT_PUBLIC_POLYGON_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 80001:
         contractAddress = process.env.NEXT_PUBLIC_MUMBAI_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 43114:
         contractAddress = process.env.NEXT_PUBLIC_AVALANCHE_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 11155111:
         contractAddress = process.env.NEXT_PUBLIC_SEPOLIA_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       default:
         contractAddress = process.env.NEXT_PUBLIC_TOKEN_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
     }
 
-    if (!validateForm()) return
+    if (!isConnected || !address) {
+      console.error('Wallet not connected');
+      return;
+    }
+
+    if (!validateForm()) {
+      console.error('Form validation failed');
+      return
+    } 
     
     try {
-      setIsDeploying(true)
-      
+      // setIsDeploying(true)
       const totalSupplyWithDecimals = parseUnits(
         totalSupply, 
         parseInt(decimals)
       )
+  
+      // Ensure we have a valid contract address
+      if (!contractAddress) {
+        throw new Error('No contract address found for the current network');
+      }
+  
+      // Submit the transaction
+      console.log('Submitting transaction...');
       
-      writeContract({
+      const txHash = await writeContractAsync({
         address: contractAddress,
         abi: erc20Abi,
         functionName: 'createERC20',
@@ -170,11 +260,14 @@ export default function Token() {
           parseInt(decimals),
           totalSupplyWithDecimals,
           initialHolder as `0x${string}`
-        ]
+        ],
+        chainId: chainId,
       })
+
+      setTransactionHash(txHash);
     } catch (error) {
       console.error('Deployment error:', error)
-      setIsDeploying(false)
+      // setIsDeploying(false)
     }
   }
 
@@ -277,7 +370,6 @@ export default function Token() {
                 {t('initial_holder_description') || 'The wallet address that will initially hold all tokens (defaults to your connected wallet)'}
               </p>
             </div>
-            
             {/* Deploy Button */}
             <div className="pt-4">
               <Button

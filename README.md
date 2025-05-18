@@ -63,16 +63,16 @@ npx hardhat ignition deploy ./ignition/modules/ERC721Factory.ts --network custom
 
 ```bash
 # 查看账户余额
-curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC", "latest"],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:37067/ext/bc/myblockchain/rpc
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC", "latest"],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:42203/ext/bc/2ip2zuU7TVnMRximYcXydPSxSvNtfkdn32AVRYZo5wnSD1D5gT/rpc
 
 # 查询最近的区块信息
-curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", true],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:37067/ext/bc/myblockchain/rpc
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", true],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:42203/ext/bc/2ip2zuU7TVnMRximYcXydPSxSvNtfkdn32AVRYZo5wnSD1D5gT/rpc
 
 # 查询交易信息
-curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["0x0d4729750f41c1723e256cbdeb0b97c49d7c55faac4f137fcf002f5e5d8faa52"],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:37067/ext/bc/myblockchain/rpc
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["0x2f045e265bc15005e3957f8ee2b33c4ef3b957e98123e623287c06bcf125d1da"],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:42203/ext/bc/2ip2zuU7TVnMRximYcXydPSxSvNtfkdn32AVRYZo5wnSD1D5gT/rpc
 
 # 查询一个合约地址
-curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getCode","params":["0x4Ac1d98D9cEF99EC6546dEd4Bd550b0b287aaD6D", "latest"],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:37067/ext/bc/myblockchain/rpc
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getCode","params":["0xA4cD3b0Eb6E5Ab5d8CE4065BcCD70040ADAB1F00", "latest"],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:42203/ext/bc/2ip2zuU7TVnMRximYcXydPSxSvNtfkdn32AVRYZo5wnSD1D5gT/rpc
 
 ```
 
@@ -101,3 +101,7 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getCode","params":["0x4Ac1d9
 https://token-launcher-beryl.vercel.app/
 
 ![](images/1747541888517.jpg)
+
+![](images/1747582236559.jpg)
+
+![](images/1747582297377.jpg)

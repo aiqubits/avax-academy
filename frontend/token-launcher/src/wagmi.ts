@@ -14,7 +14,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: './.env.development.local' });
 
 const  customChain = {
-    id: Number(process.env.NEXT_PUBLIC_CUSTOM_CHAIN_ID),
+    id: Number(process.env.NEXT_PUBLIC_CUSTOM_CHAIN_ID || ''),
     name: process.env.NEXT_PUBLIC_CUSTOM_CHAIN_NAME || '',
     iconUrl: process.env.NEXT_PUBLIC_CUSTOM_CHAIN_ICON_URL || '',
     iconBackground: '#fff',
@@ -25,6 +25,9 @@ const  customChain = {
     },
     rpcUrls: {
       default: { http: [ process.env.NEXT_PUBLIC_CUSTOM_CHAIN_RPC_URL || ''] },
+      public: { 
+        http: [process.env.NEXT_PUBLIC_CUSTOM_CHAIN_RPC_URL || '']
+      },
     },
     blockExplorers: {
       default: {
@@ -45,11 +48,12 @@ export const config = getDefaultConfig({
     base,
     avalanche,
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
-    customChain || undefined,
+    customChain,
   ],
   transports: {
     [mainnet.id]: http(process.env.NEXT_PUBLIC_ETH_TRANSPORTS_MAINNET_URL || ''),
     [sepolia.id]: http(process.env.NEXT_PUBLIC_ETH_TRANSPORTS_SEPOLIA_URL || ''),
+    [customChain.id]: http(process.env.NEXT_PUBLIC_CUSTOM_CHAIN_RPC_URL || ''),
   },
   ssr: true,
 });

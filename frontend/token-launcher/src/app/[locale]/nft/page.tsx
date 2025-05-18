@@ -34,14 +34,24 @@ export default function Nft() {
   const [mintedTokenId, setMintedTokenId] = useState('')
   
   // Contract deployment hooks
-  const { data: hash, isPending, writeContract, error: writeError } = useWriteContract()
+  const { data: hash, isPending, writeContractAsync, error: writeError } = useWriteContract()
+  
   
   const { 
     data: receipt,
     isLoading: isConfirming,
-    error: confirmError
+    error: confirmError,
+    isSuccess: isConfirmed,
+    isError: isReceiptError,
+    status: receiptStatus    
   } = useWaitForTransactionReceipt({ 
     hash,
+    confirmations: 1,
+    query: {
+      enabled: !!hash,
+      retry: 3,
+      retryDelay: 1000
+    }    
   })
   
   // Mint NFT hooks
@@ -53,6 +63,12 @@ export default function Nft() {
     error: mintConfirmError
   } = useWaitForTransactionReceipt({ 
     hash: mintHash,
+    confirmations: 1,
+    query: {
+      enabled: !!hash,
+      retry: 3,
+      retryDelay: 1000
+    }
   })
   
   // Update transaction state when hash is available
@@ -71,25 +87,61 @@ export default function Nft() {
   
   // Update deployed collection address when receipt is available
   useEffect(() => {
-    if (receipt) {
-      // For ERC721, we need to extract the deployed address from logs
-      // The CollectionCreated event has the collection address as the second indexed parameter
-      const collectionCreatedEvent = receipt.logs.find(log => {
-        // Check if this log is from our contract and is the CollectionCreated event
-        return log.topics && log.topics[0] === '0x3e7a3ee3a2b3d5360d9ab555d2a6c425f6d89d5ff11a66c03d7e0c1b35af3b91';
-      });
+    console.log(`Update deployed collection address`);
+    
+    if (!receipt) {
+      console.log('Skipping receipt processing - no receipt or not mounted');
+      return;
+    }
+  
+  // Debug: Log all events in the receipt
+  if (receipt.logs && Array.isArray(receipt.logs)) {    
+    // Look for the token address in the logs
+    // Based on the logs, we can see the token address in the second log's topics
+    if (receipt.logs.length >= 2) {
+      const nftLog = receipt.logs[0]; // Second log seems to have the token info
       
-      if (collectionCreatedEvent && collectionCreatedEvent.topics && collectionCreatedEvent.topics[2]) {
-        // Extract the collection address from the event
-        const collectionAddress = `0x${collectionCreatedEvent.topics[2].slice(26)}`;
-        setDeployedCollectionAddress(collectionAddress);
-        setIsDeploying(false);
+      if (nftLog.topics && nftLog.topics[2]) {
+        try {
+          // Extract the address from the third topic (index 2) which contains the "to" address
+          const addressHex = nftLog.address.slice(-40); // Last 40 characters
+          const tokenAddress = `0x${addressHex}`.toLowerCase();
+
+          setDeployedCollectionAddress(tokenAddress);
+          setIsDeploying(false);
+          return;
+        } catch (error) {
+          console.error('Error parsing token address from logs:', error);
+        }
       }
     }
+
+    // Fallback: Try to find any address that looks like a token address
+    for (const log of receipt.logs) {
+      if (log.topics) {
+        for (const topic of log.topics) {
+          // Look for a topic that contains an address (40 hex chars)
+          const addressMatch = topic.match(/0x[a-fA-F0-9]{40}/);
+          if (addressMatch) {
+            const potentialAddress = addressMatch[0].toLowerCase();
+            console.log('Found potential nft address:', potentialAddress);
+            setDeployedCollectionAddress(potentialAddress);
+            setIsDeploying(false);
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // If we get here, we couldn't find the token address in the logs
+  console.warn('Could not find token address in receipt logs');
+  // setIsDeploying(false);
   }, [receipt])
   
   // Update minted token ID when mint receipt is available
   useEffect(() => {
+    console.log(`Update minted token ID`);
     if (mintReceipt) {
       // Extract the minted token ID from the Transfer event
       const transferEvent = mintReceipt.logs.find(log => {
@@ -169,26 +221,45 @@ export default function Nft() {
     switch (chainId) {
       case 1:
         contractAddress = process.env.NEXT_PUBLIC_ETH_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 4:
         contractAddress = process.env.NEXT_PUBLIC_RINKEBY_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 137:
         contractAddress = process.env.NEXT_PUBLIC_POLYGON_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 80001:
         contractAddress = process.env.NEXT_PUBLIC_MUMBAI_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 43114:
         contractAddress = process.env.NEXT_PUBLIC_AVALANCHE_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       case 11155111:
         contractAddress = process.env.NEXT_PUBLIC_SEPOLIA_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
+        break;
       default:
         contractAddress = process.env.NEXT_PUBLIC_NFT_FACTORY_CONTRACT_ADDRESS as `0x${string}`;
     }
 
-    if (!validateForm()) return
+    if (!isConnected || !address) {
+      console.error('Wallet not connected');
+      return;
+    }
+
+    if (!validateForm()) {
+      console.error('Form validation failed');
+      return
+    }
+
+    // Ensure we have a valid contract address
+    if (!contractAddress) {
+      throw new Error('No contract address found for the current network');
+    }
     
     try {
       setIsDeploying(true)
       
-      writeContract({
+      const txHash = await writeContractAsync({
         address: contractAddress,
         abi: erc721FactoryAbi,
         functionName: 'createCollection',
@@ -196,8 +267,12 @@ export default function Nft() {
           collectionName,
           collectionSymbol,
           baseURI
-        ]
+        ],
+        chainId: chainId,
       })
+
+      setTransactionHash(txHash);
+
     } catch (error) {
       console.error('Deployment error:', error)
       setIsDeploying(false)
@@ -363,7 +438,7 @@ export default function Nft() {
                   {t('nft_minted_successfully') || 'NFT Minted Successfully!'}
                 </h3>
                 <div className="bg-muted p-4 rounded-md mb-4">
-                  <p className="font-medium">{t('token_id') || 'Token ID'}:</p>
+                  <p className="font-medium">{t('current_nft_id') || 'Current NFT ID'}:</p>
                   <p className="font-mono">{mintedTokenId}</p>
                 </div>
                 <div className="bg-muted p-4 rounded-md mb-6">
@@ -377,6 +452,28 @@ export default function Nft() {
                   >
                     {t('view_on_explorer') || 'View on Explorer'}
                   </a>
+                </div>
+                  <div className="mt-6">
+                  <h3 className="text-xl font-semibold mb-4">
+                    {t('mint_another_nft') || 'Mint Another NFT'}
+                  </h3>
+                  <Button
+                    onClick={handleMintNFT}
+                    disabled={isMintPending || isMintConfirming}
+                    className="w-full"
+                  >
+                    {isMintPending || isMintConfirming ? (
+                      t('minting') || 'Minting...'
+                    ) : (
+                      t('mint_nft') || 'Mint NFT'
+                    )}
+                  </Button>
+                  
+                  {mintWriteError && (
+                    <p className="text-red-500 text-sm mt-2">
+                      {t('minting_error') || 'Error minting NFT'}: {mintWriteError.message}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
