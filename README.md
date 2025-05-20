@@ -109,6 +109,6 @@ https://token-launcher-beryl.vercel.app/
 
 ![](images/1747582297377.jpg)
 
-## 在自定义的L1上发布自定义MEME Token与NFT（视频）
+## 在自定义的L1上发布自定义MEME Token与NFT（视频演示）
 
-[![视频封面](images/1747541888517.jpg)](https://youtu.be/eqBNYiAOjMM)
+[![视频封面](images/1747541888517.jpg)](https://youtu.be/2Wu8jbDP-lw)
